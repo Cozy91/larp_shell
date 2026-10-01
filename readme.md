@@ -1,8 +1,8 @@
-#larp_shell 
+# larp_shell 
 
 Making it cuz i wanted to. 
 
-##features for now 
+## features for now
 
 -execute basic shell commands
 -handle basic redirection
@@ -10,4 +10,5 @@ Making it cuz i wanted to.
 
 
 took me 3 hrs just to make this basic version ;( 
+
 NO AI USED
