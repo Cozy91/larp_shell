@@ -10,6 +10,7 @@ Making it cuz i wanted to.
 
 -can also do basic shell scripting(hehe)
 
+---
 
 took me 3 hrs just to make this basic version ;( 
 
