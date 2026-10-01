@@ -5,7 +5,9 @@ Making it cuz i wanted to.
 ## features for now
 
 -execute basic shell commands
+
 -handle basic redirection
+
 -can also do basic shell scripting(hehe)
 
 
