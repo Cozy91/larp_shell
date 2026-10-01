@@ -18,11 +18,7 @@ if(argc > 1){
   if(input == stdin){
    printf("larp > "); 
   }
-   //char buf[1024];
-
- //  if(argc == 1){
-  // fgets(buf,1024,stdin);
- // }
+  
   if(fgets(buf,sizeof(buf),input) == NULL){
     if(input != stdin){
         fclose(input);
