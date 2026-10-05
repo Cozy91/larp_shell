@@ -5,6 +5,7 @@
 #include<string.h>
 
 int handle_redirect(char *args[]);
+int handle_cd(char* args[]);
 
 int main(int argc,char *argv[]){
 char buf[1024];
@@ -12,6 +13,7 @@ FILE* input = stdin;
 
 if(argc > 1){
   input=fopen(argv[1],"r");
+  
 }
 
   while(true){
@@ -19,13 +21,14 @@ if(argc > 1){
    printf("larp > "); 
   }
   
-  if(fgets(buf,sizeof(buf),input) == NULL){
+  if(fgets(buf,sizeof(buf),input) == NULL){ // for shell scripting
     if(input != stdin){
         fclose(input);
-        input=stdin;
+        input=stdin; //if no script
         continue;
     }
   }
+ 
   char* nl=strchr(buf,'\n');
   if(nl)*nl='\0';
 
@@ -33,18 +36,21 @@ if(argc > 1){
   int nargs=0;
   
   args[0]=strtok(buf," ");
-  while(buf && args[nargs] != NULL){
+  while(args[nargs] != NULL){
     args[++nargs] = strtok(NULL," ");
   }
 
  if(args[0] == NULL)continue;
  if(strcmp(args[0],"exit") == 0) exit(0);
    pid_t pid=fork(); 
-   if(pid > 0){
+
+   if(pid > 0){ //parent process
      wait(NULL);
    }
-   else{
+
+   else{ //child process
    if(handle_redirect(args)) exit(0);
+   if(handle_cd(args)) continue;
    execvp(args[0],args);
       
    }
@@ -65,3 +71,13 @@ int handle_redirect(char* args[]){
   }
   return 0;
 }
+
+int handle_cd(char *args[]){
+   // char* path;
+   if(strcmp(args[0],"cd") == 0){
+    
+    if(chdir(args[1]) == 0) return 1;
+   }
+  return 0;
+}
+
