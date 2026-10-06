@@ -3,9 +3,11 @@
 #include<unistd.h>
 #include<sys/wait.h>
 #include<string.h>
-
+#include<fcntl.h>
+#include<limits.h>
 int handle_redirect(char *args[]);
 int handle_cd(char* args[]);
+int pipes(char* args[]);
 
 int main(int argc,char *argv[]){
 char buf[1024];
@@ -37,7 +39,7 @@ if(argc > 1){
   
   args[0]=strtok(buf," ");
   while(args[nargs] != NULL){
-    args[++nargs] = strtok(NULL," ");
+    args[++nargs] = strtok(NULL," "); //tokenisation
   }
 
  if(args[0] == NULL)continue;
@@ -49,7 +51,7 @@ if(argc > 1){
    }
 
    else{ //child process
-   if(handle_redirect(args)) exit(0);
+   if(handle_redirect(args));
    if(handle_cd(args)) continue;
    execvp(args[0],args);
       
@@ -59,15 +61,18 @@ if(argc > 1){
 }
 
 int handle_redirect(char* args[]){
+  char *path;
   for(int i=0;args[i]!=NULL;i++){
     if(strcmp(args[i], ">") == 0){
-      FILE *fp=fopen(args[i+1],"w"); 
-      for(int j=0;j<i;j++){
-        fwrite(args[j],sizeof(char),strlen(args[j]),fp);
+      
+        path=args[i+1];
+      
+     int fd=open(path,O_WRONLY|O_CREAT|O_TRUNC,0644); //0644-read+write permissions
+     dup2(fd,STDOUT_FILENO);//to make fd point to the same thing as STDOUT_FILENO(stdout)
+     close(fd);
+     args[i]=NULL; // for >
+     return 1;
       }
-          fclose(fp);
-          return 1;
-    }
   }
   return 0;
 }
@@ -81,3 +86,28 @@ int handle_cd(char *args[]){
   return 0;
 }
 
+int pipes(char* args[]){
+  int j;
+  char buff[PIPE_MAX];
+  
+  for(int i=0;args[i]!=NULL;i++){
+    if(args[i]=='|'){
+      j=i;
+      break;
+    }
+  
+    int pipe(int filedes[2]);
+    if(pipe(filedes) == -1)fprintf(stderr, "error creating pipe\n");
+
+    switch(fork()){
+      case 0: //to check if read end of file is closed while writing the contents of pipe to child process
+        if(filedes[0] == -1)fprintf(stderr, "pipe not working\n");
+      
+        while(read(filedes[0],buff,))
+
+        break;
+      case default: //for checking the read end of pipe for parent
+        if(filedes[2]==-1)fprintf(stderr, "pipe not working\n");
+    }
+  }
+}
