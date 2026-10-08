@@ -53,6 +53,7 @@ if(argc > 1){
    else{ //child process
    if(handle_redirect(args));
    if(handle_cd(args)) continue;
+   if(pipes(args)) continue;
    execvp(args[0],args);
       
    }
@@ -68,7 +69,7 @@ int handle_redirect(char* args[]){
         path=args[i+1];
       
      int fd=open(path,O_WRONLY|O_CREAT|O_TRUNC,0644); //0644-read+write permissions
-     dup2(fd,STDOUT_FILENO);//to make fd point to the same thing as STDOUT_FILENO(stdout)
+     dup2(fd,STDOUT_FILENO);//making STDOUT_FILENO point to the same place where fd points to
      close(fd);
      args[i]=NULL; // for >
      return 1;
@@ -87,27 +88,56 @@ int handle_cd(char *args[]){
 }
 
 int pipes(char* args[]){
-  int j;
-  char buff[PIPE_MAX];
-  
-  for(int i=0;args[i]!=NULL;i++){
-    if(args[i]=='|'){
-      j=i;
+  int j,filedes[2],k;
+  bool found=false;
+   for(int i=0;args[i]!=NULL;i++){
+    if(strcmp(args[i],"|")==0){
+      k=i+1;
+      j=i-1;
+      found=true;
       break;
     }
-  
-    int pipe(int filedes[2]);
-    if(pipe(filedes) == -1)fprintf(stderr, "error creating pipe\n");
-
-    switch(fork()){
-      case 0: //to check if read end of file is closed while writing the contents of pipe to child process
-        if(filedes[0] == -1)fprintf(stderr, "pipe not working\n");
-      
-        while(read(filedes[0],buff,))
-
-        break;
-      case default: //for checking the read end of pipe for parent
-        if(filedes[2]==-1)fprintf(stderr, "pipe not working\n");
-    }
   }
-}
+   if(!found){return 0;}
+   char *newargs[20];
+   for(int i=0;i<=j;i++){
+         newargs[i]=args[i];
+   }
+  newargs[j+1]=NULL; //for splitting the given command into two parts " " | " "
+ char *ch2args[20];
+ int i;
+ for(i=0;args[k]!=NULL;i++){
+   ch2args[i] = args[k];
+   k++;
+ }
+ ch2args[i]=NULL;
+    //int pipe(int filedes[2]);
+    if(pipe(filedes) == -1){fprintf(stderr, "error creating pipe\n"); return 0;}
+     
+    pid_t child1=fork(); //first child who will write into the pipe
+    
+    if(child1 == 0){
+       close(filedes[0]); // don't need the read end while writing to pipe
+      
+       dup2(filedes[1],STDOUT_FILENO); //just an alias for STDOUT_FILENO, filedes[1] will have same behavior as STDOUT_FILENO or the standard output points to the pipe's write end  
+       close(filedes[1]);
+       execvp(newargs[0],newargs);
+
+    }
+     pid_t child2=fork(); // for reading from the pipe
+     
+     if(child2 == 0){
+       close(filedes[1]); // don't need the write end 
+       
+       dup2(filedes[0],STDIN_FILENO); // the read end will behave same as stdin or the standard input points to the pipe's read end or make this process's standard input come from the pipe
+       close(filedes[0]);
+       execvp(ch2args[0],ch2args);
+
+     }
+     close(filedes[0]);
+     close(filedes[1]);
+     int status;
+     waitpid(-1,&status,0);
+     waitpid(-1,&status,0);
+     return 1;
+   }
