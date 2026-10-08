@@ -16,6 +16,4 @@ Making it cuz i wanted to.
 
 ---
 
-took me 3 hrs just to make this basic version ;( 
-
 NO AI USED
